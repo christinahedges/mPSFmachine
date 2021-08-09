@@ -112,14 +112,23 @@ class Asteroid(object):
         hdu = fits.open(fname)
         self.prfhdr = hdu[0].header
         self.prf = fitsio.read(hdu._file.name)
-
-        row, col = int(self.prfhdr["CRVAL2P"]), int(self.prfhdr["CRVAL1P"])
-        col = (
-            np.arange(0, 0 + self.prf.shape[0]) * self.prfhdr["CDELT1P"]
-        ) - self.prfhdr["CDELT1P"] * self.prf.shape[0] / 2
-        row = (
-            np.arange(0, 0 + self.prf.shape[1]) * self.prfhdr["CDELT2P"]
-        ) - self.prfhdr["CDELT2P"] * self.prf.shape[1] / 2
+        crval1p, crval2p, cdelt1p, cdelt2p = (
+            self.prfhdr["CRVAL1P"],
+            self.prfhdr["CRVAL2P"],
+            self.prfhdr["CDELT1P"],
+            self.prfhdr["CDELT2P"],
+        )
+        col = np.arange(0.5, np.shape(self.prf)[1] + 0.5)
+        row = np.arange(0.5, np.shape(self.prf)[0] + 0.5)
+        col = (col - np.size(col) / 2) * cdelt1p
+        row = (row - np.size(row) / 2) * cdelt2p
+        # row, col = int(self.prfhdr["CRVAL2P"]), int(self.prfhdr["CRVAL1P"])
+        # col = (
+        #     np.arange(0, 0 + self.prf.shape[0]) * self.prfhdr["CDELT1P"]
+        # ) - self.prfhdr["CDELT1P"] * self.prf.shape[0] / 2
+        # row = (
+        #     np.arange(0, 0 + self.prf.shape[1]) * self.prfhdr["CDELT2P"]
+        # ) - self.prfhdr["CDELT2P"] * self.prf.shape[1] / 2
 
         def get_LFD(plot=plot):
             row, col = np.meshgrid(col, row)
