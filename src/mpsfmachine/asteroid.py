@@ -286,13 +286,17 @@ class Asteroid(object):
         bin_down_subtimes()
 
     @property
-    def _A_single_flux(self):
+    def _A_single_flux_all_bkg(self):
         """Makes a design matrix for the asteroid that has a single flux value."""
+        npix = self.shape[1] * self.shape[2]
+        ntime = self.shape[0]
+        Abkg = sparse.lil_matrix((ntime * npix, ntime))
+        for idx in range(ntime):
+            Abkg[npix * idx : npix * (idx + 1), idx] = 1
         t = (self.time - self.time.mean()) / (self.time.max() - self.time.min())
         t = (t[:, None, None] * np.ones(self.shape)).ravel()
-        return np.vstack(
+        A = np.vstack(
             [
-                self.fmodel,
                 self.gmodel1,
                 self.gmodel2,
                 self.gmodel1 * self.gmodel2,
@@ -302,14 +306,50 @@ class Asteroid(object):
                 self.gmodel1 * t ** 2,
                 self.gmodel2 * t ** 2,
                 self.gmodel1 * self.gmodel2 * t ** 2,
-                self.gmodel1 ** 2,
-                self.gmodel2 ** 2,
-                self.gmodel1 * t ** 3,
-                self.gmodel2 * t ** 3,
-                self.gmodel1 * self.gmodel2 * t ** 3,
-                self.gmodel1 ** 2 * self.gmodel2,
-                self.gmodel1 * self.gmodel2 ** 2,
-                self.gmodel1 ** 2 * self.gmodel2 ** 2,
+                # self.gmodel1 ** 2,
+                # self.gmodel2 ** 2,
+                # self.gmodel1 * t ** 3,
+                # self.gmodel2 * t ** 3,
+                # self.gmodel1 * self.gmodel2 * t ** 3,
+                # self.gmodel1 ** 2 * self.gmodel2,
+                # self.gmodel1 * self.gmodel2 ** 2,
+                # self.gmodel1 ** 2 * self.gmodel2 ** 2,
+            ]
+        ).T
+        return sparse.hstack(
+            [
+                sparse.csr_matrix(self.fmodel[:, None]),
+                Abkg,
+                sparse.csr_matrix(A),
+            ],
+            format="csr",
+        )
+
+    @property
+    def _A_single_flux(self):
+        """Makes a design matrix for the asteroid that has a single flux value."""
+        t = (self.time - self.time.mean()) / (self.time.max() - self.time.min())
+        t = (t[:, None, None] * np.ones(self.shape)).ravel()
+        return np.vstack(
+            [
+                self.fmodel,
+                # self.gmodel1,
+                # self.gmodel2,
+                # self.gmodel1 * self.gmodel2,
+                # self.gmodel1 * t,
+                # self.gmodel2 * t,
+                # self.gmodel1 * self.gmodel2 * t,
+                # self.gmodel1 * t ** 2,
+                # self.gmodel2 * t ** 2,
+                # self.gmodel1 * self.gmodel2 * t ** 2,
+                # self.gmodel1 ** 2,
+                # self.gmodel2 ** 2,
+                # self.gmodel1 * t ** 3,
+                # self.gmodel2 * t ** 3,
+                # self.gmodel1 * self.gmodel2 * t ** 3,
+                # self.gmodel1 ** 2 * self.gmodel2,
+                # self.gmodel1 * self.gmodel2 ** 2,
+                # self.gmodel1 ** 2 * self.gmodel2 ** 2,
                 np.ones(np.product(self.shape))[None, :],
             ]
         ).T
@@ -343,15 +383,15 @@ class Asteroid(object):
                             self.gmodel1 * self.gmodel2 * t,
                             self.gmodel1 * t ** 2,
                             self.gmodel2 * t ** 2,
-                            self.gmodel1 * self.gmodel2 * t ** 2,
-                            self.gmodel1 * t ** 3,
-                            self.gmodel2 * t ** 3,
-                            self.gmodel1 * self.gmodel2 * t ** 3,
-                            self.gmodel1 ** 2,
-                            self.gmodel2 ** 2,
-                            self.gmodel1 ** 2 * self.gmodel2,
-                            self.gmodel1 * self.gmodel2 ** 2,
-                            self.gmodel1 ** 2 * self.gmodel2 ** 2,
+                            # self.gmodel1 * self.gmodel2 * t ** 2,
+                            # self.gmodel1 * t ** 3,
+                            # self.gmodel2 * t ** 3,
+                            # self.gmodel1 * self.gmodel2 * t ** 3,
+                            # self.gmodel1 ** 2,
+                            # self.gmodel2 ** 2,
+                            # self.gmodel1 ** 2 * self.gmodel2,
+                            # self.gmodel1 * self.gmodel2 ** 2,
+                            # self.gmodel1 ** 2 * self.gmodel2 ** 2,
                         ]
                     ).T
                 ),
